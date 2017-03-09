@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <ap_int.h>
 
 constexpr int kBurstCount = ${BENCHMARK_BURST_COUNT};
