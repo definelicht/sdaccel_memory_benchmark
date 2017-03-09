@@ -1,0 +1,22 @@
+#pragma once
+
+#include <ap_int.h>
+
+constexpr int kBurstCount = ${BENCHMARK_BURST_COUNT};
+constexpr int kBurstLength = ${BENCHMARK_BURST_LENGTH};
+constexpr int kMemorySize = 32 * kBurstLength;
+constexpr int kPortWidth = ${BENCHMARK_PORT_WIDTH};
+using Data_t = ap_uint<kPortWidth>;
+
+extern "C" {
+
+void MemoryBenchmark(
+    Data_t const *in0,
+    Data_t *out0
+#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
+    , Data_t const *in1,
+    Data_t *out1
+#endif
+    );
+
+}
