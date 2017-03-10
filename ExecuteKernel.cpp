@@ -65,9 +65,12 @@ int main(int argc, char **argv) {
 
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
-    const auto transferred =
-        1e-9 * static_cast<float>((static_cast<long>(kBurstCount) *
+    auto transferred =
+        2e-9 * static_cast<float>((static_cast<long>(kBurstCount) *
                                    kBurstLength * (kPortWidth / 8)));
+#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
+    transferred *= 2;
+#endif
     std::cout << " Done.\nTransferred " << std::setprecision(2) << transferred
               << " GB in " << elapsed << " seconds, bandwidth "
               << (transferred / elapsed) << " GB/s" << std::endl;
