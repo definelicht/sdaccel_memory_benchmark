@@ -87,5 +87,5 @@ endif()
 
 add_custom_target(kernel
   COMMAND ${SDACCEL_XOCC} -t hw ${BENCHMARK_XOCC_FLAGS}
-  -o ${KERNEL_FILENAME}.xclbin
+  -o memory_benchmark.xclbin
   DEPENDS ${BENCHMARK_HLS_DEPENDS})
