@@ -11,13 +11,6 @@ using Data_t = ap_uint<kPortWidth>;
 
 extern "C" {
 
-void MemoryBenchmark(
-    Data_t const *in0,
-    Data_t *out0
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-    , Data_t const *in1,
-    Data_t *out1
-#endif
-    );
+void MemoryBenchmark(Data_t const *in, Data_t *out);
 
 }

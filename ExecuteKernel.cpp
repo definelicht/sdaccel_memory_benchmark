@@ -23,64 +23,42 @@ int main(int argc, char **argv) {
     }
   }
 
-  std::vector<Data_t> read0;
-  std::vector<Data_t> write0;
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-  std::vector<Data_t> read1;
-  std::vector<Data_t> write1;
-#endif
+  std::vector<Data_t> read;
+  std::vector<Data_t> write;
 
   try {
 
     hlslib::ocl::Context context("Xilinx");
 
-    auto read0Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
-        hlslib::ocl::MemoryBank::bank0, kMemorySize);
-    auto write0Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
+    auto readDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
         hlslib::ocl::MemoryBank::bank0, kMemorySize);
 #ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-    auto read1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
+    auto writeDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
         hlslib::ocl::MemoryBank::bank1, kMemorySize);
-    auto write1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
-        hlslib::ocl::MemoryBank::bank1, kMemorySize);
+#else
+    auto writeDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
+        hlslib::ocl::MemoryBank::bank0, kMemorySize);
 #endif
 
     if (verify) {
-      read0 = std::vector<Data_t>(kMemorySize, 1);
-      read0Device.CopyToDevice(read0.cbegin());
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-      read1 = std::vector<Data_t>(kMemorySize, 2);
-      read1Device.CopyToDevice(read1.cbegin());
-#endif
+      read = std::vector<Data_t>(kMemorySize, 1);
+      readDevice.CopyToDevice(read.cbegin());
     }
 
-#ifdef SDACCEL_MEMORYBENCHMARK_ADM_7V3
     auto kernel = context.MakeKernelFromBinary(
-        "adm-7v3.xclbin", "MemoryBenchmark", read0Device, write0Device);
-#else
-    auto kernel = context.MakeKernelFromBinary(
-        "tul-ku115.xclbin", "MemoryBenchmark", read0Device, write0Device,
-        read1Device, write1Device);
-#endif
+        "memory_benchmark.xclbin", "MemoryBenchmark", readDevice, writeDevice);
 
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
     auto transferred =
         2e-9 * static_cast<float>((static_cast<long>(kBurstCount) *
                                    kBurstLength * (kPortWidth / 8)));
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-    transferred *= 2;
-#endif
     std::cout << " Done.\nTransferred " << std::setprecision(2) << transferred
               << " GB in " << elapsed << " seconds, bandwidth "
               << (transferred / elapsed) << " GB/s" << std::endl;
     if (verify) {
-      write0.resize(kMemorySize);
-      write0Device.CopyToHost(write0.begin());
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-      write1.resize(kMemorySize);
-      write1Device.CopyToHost(write1.begin());
-#endif
+      write.resize(kMemorySize);
+      writeDevice.CopyToHost(write.begin());
     }
 
   } catch (std::runtime_error const &err) {
@@ -98,17 +76,11 @@ int main(int argc, char **argv) {
         break;
       }
       for (int j = begin; j < end; ++j) {
-        std::cout << write0[j] << " / " << read0[j] << "\n";
-        if (write0[j] != read0[j]) {
+        std::cout << write[j] << " / " << read[j] << "\n";
+        if (write[j] != read[j]) {
           std::cerr << "Verification failed." << std::endl;
           return 1;
         }
-  #ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
-        if (write1[j] != read1[j]) {
-          std::cerr << "Verification failed." << std::endl;
-          return 1;
-        }
-  #endif
       }
     }
   }
