@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
   }
 
   std::vector<Data_t> read;
-  std::vector<Data_t> write;
+  std::vector<Data_t> write0;
+  std::vector<Data_t> write1;
 
   try {
 
@@ -32,13 +33,10 @@ int main(int argc, char **argv) {
 
     auto readDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
         hlslib::ocl::MemoryBank::bank0, kMemorySize);
-#ifdef SDACCEL_MEMORYBENCHMARK_TUL_KU115
     auto writeDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
-        hlslib::ocl::MemoryBank::bank1, kMemorySize);
-#else
-    auto writeDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
-        hlslib::ocl::MemoryBank::bank0, kMemorySize);
-#endif
+        kDimms > 1 ? hlslib::ocl::MemoryBank::bank1
+                   : hlslib::ocl::MemoryBank::bank0,
+        kMemorySize);
 
     if (verify) {
       read = std::vector<Data_t>(kMemorySize, 1);

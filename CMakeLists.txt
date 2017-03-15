@@ -82,19 +82,19 @@ set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
   # Source
   ${CMAKE_SOURCE_DIR}/MemoryBenchmark.cpp
   # Flags
-  --kernel MemoryBenchmark 
+  --kernel ${BENCHMARK_ENTRY_FUNCTION} 
   --xdevice ${BENCHMARK_DSA_STRING}
-  --xp prop:kernel.MemoryBenchmark.kernel_flags="${CMAKE_CXX_FLAGS}"
+  --xp prop:kernel.${BENCHMARK_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS}"
   --kernel_frequency=${BENCHMARK_TARGET_CLOCK})
 if (BENCHMARK_DIMMS GREATER 3)
   set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM2.core.OCL_REGION_0.M02_AXI
-    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM3.core.OCL_REGION_0.M03_AXI)
+    --xp misc:map_connect=add.kernel.${BENCHMARK_ENTRY_FUNCTION}_1.M_AXI_GMEM2.core.OCL_REGION_0.M02_AXI
+    --xp misc:map_connect=add.kernel.${BENCHMARK_ENTRY_FUNCTION}_1.M_AXI_GMEM3.core.OCL_REGION_0.M03_AXI)
 endif()
 if (BENCHMARK_DIMMS GREATER 1)
   set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
+    --xp misc:map_connect=add.kernel.${BENCHMARK_ENTRY_FUNCTION}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
+    --xp misc:map_connect=add.kernel.${BENCHMARK_ENTRY_FUNCTION}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
     --max_memory_ports all)
 endif()
 

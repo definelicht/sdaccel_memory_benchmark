@@ -52,8 +52,8 @@ void MemoryBenchmark(Data_t const *in, Data_t *out) {
 void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
                               Data_t const *in1, Data_t *out1) {
   #pragma HLS INTERFACE m_axi port=in0  offset=slave bundle=gmem0
-  #pragma HLS INTERFACE m_axi port=out1 offset=slave bundle=gmem1
-  #pragma HLS INTERFACE m_axi port=in0  offset=slave bundle=gmem2
+  #pragma HLS INTERFACE m_axi port=out0 offset=slave bundle=gmem1
+  #pragma HLS INTERFACE m_axi port=in1  offset=slave bundle=gmem2
   #pragma HLS INTERFACE m_axi port=out1 offset=slave bundle=gmem3
   #pragma HLS INTERFACE s_axilite port=in0    bundle=control 
   #pragma HLS INTERFACE s_axilite port=out0   bundle=control 
