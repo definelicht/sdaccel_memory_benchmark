@@ -4,8 +4,12 @@
 
 int main() {
   std::vector<Data_t> read(kMemorySize, 1);
-  std::vector<Data_t> write(kMemorySize, 0);
-  MemoryBenchmark(read.data(), write.data());
+  std::vector<Data_t> write0(kMemorySize, 0);
+  std::vector<Data_t> write1(kMemorySize, 0);
+  std::vector<Data_t> write2(kMemorySize, 0);
+  MemoryBenchmark(read.data(), write0.data());
+  MemoryBenchmarkFourDimms(read.data(), write1.data(), read.data(),
+                           write2.data());
   for (int i = 0; i < kBurstCount; ++i) {
     const int begin = i * (kBurstLength + 1);
     const int end = i * (kBurstLength + 1) + kBurstLength;
@@ -13,8 +17,15 @@ int main() {
       break;
     }
     for (int j = begin; j < end; ++j) {
-      std::cout << write[j] << " / " << read[j] << "\n";
-      if (write[j] != read[j]) {
+      if (write0[j] != read[j]) {
+        std::cerr << "Verification failed." << std::endl;
+        return 1;
+      }
+      if (write1[j] != read[j]) {
+        std::cerr << "Verification failed." << std::endl;
+        return 1;
+      }
+      if (write2[j] != read[j]) {
         std::cerr << "Verification failed." << std::endl;
         return 1;
       }

@@ -13,4 +13,7 @@ extern "C" {
 
 void MemoryBenchmark(Data_t const *in, Data_t *out);
 
+void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
+                              Data_t const *in1, Data_t *out1);
+
 }

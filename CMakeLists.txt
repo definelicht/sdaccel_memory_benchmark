@@ -12,13 +12,21 @@ if (BENCHMARK_TARGET STREQUAL "TUL-KU115")
   set(BENCHMARK_DSA_STRING "xilinx:tul-pcie3-ku115:2ddr:3.1")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDACCEL_MEMORYBENCHMARK_TUL_KU115")
   set(BENCHMARK_DIMMS 2)
-  set(KERNEL_FILENAME "tul-ku115")
+  set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmark")
+elseif (BENCHMARK_TARGET STREQUAL "TUL-KU115-XPR")
+  set(BENCHMARK_PART_NAME "xcku115-flvb2104-2-e") 
+  set(BENCHMARK_DSA_STRING "xilinx:xil-accel-rd-ku115:4ddr-xpr:3.2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDACCEL_MEMORYBENCHMARK_TUL_KU115_XPR")
+  set(BENCHMARK_DIMMS 4)
+  set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmarkFourDimms")
 elseif (BENCHMARK_TARGET STREQUAL "ADM-7V3")
   set(BENCHMARK_PART_NAME "xc7vx690tffg1157-2") 
   set(BENCHMARK_DSA_STRING "xilinx:adm-pcie-7v3:1ddr:3.0")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDACCEL_MEMORYBENCHMARK_ADM_7V3")
   set(BENCHMARK_DIMMS 1)
-  set(KERNEL_FILENAME "adm-7v3")
+  set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmark")
+else()
+  message(FATAL_ERROR "Unknown target \"${BENCHMARK_TARGET}\".")
 endif()
 set(BENCHMARK_KEEP_INTERMEDIATE OFF CACHE STRING
     "Keep intermediate SDAccel files")
@@ -27,7 +35,7 @@ set(BENCHMARK_KEEP_INTERMEDIATE OFF CACHE STRING
 set(BENCHMARK_PORT_WIDTH 512 CACHE STRING "Width of port to memory.")
 set(BENCHMARK_BURST_COUNT 524288 CACHE STRING "Number of bursts to issue.")
 set(BENCHMARK_BURST_LENGTH 2048 CACHE STRING "Length of issued bursts.")
-set(BENCHMARK_TARGET_CLOCK 250 CACHE STRING "Target clock speed.")
+set(BENCHMARK_TARGET_CLOCK 300 CACHE STRING "Target clock speed.")
 set(BENCHMARK_HLS_TARGET_TIMING 4 CACHE STRING "Target timing of HLS.")
 
 # Dependencies
@@ -78,6 +86,11 @@ set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
   --xdevice ${BENCHMARK_DSA_STRING}
   --xp prop:kernel.MemoryBenchmark.kernel_flags="${CMAKE_CXX_FLAGS}"
   --kernel_frequency=${BENCHMARK_TARGET_CLOCK})
+if (BENCHMARK_DIMMS GREATER 3)
+  set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM2.core.OCL_REGION_0.M02_AXI
+    --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM3.core.OCL_REGION_0.M03_AXI)
+endif()
 if (BENCHMARK_DIMMS GREATER 1)
   set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
     --xp misc:map_connect=add.kernel.MemoryBenchmark_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
