@@ -31,32 +31,57 @@ int main(int argc, char **argv) {
 
     hlslib::ocl::Context context("Xilinx");
 
-    auto readDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
+    auto read0Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
         hlslib::ocl::MemoryBank::bank0, kMemorySize);
-    auto writeDevice = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
-        kDimms > 1 ? hlslib::ocl::MemoryBank::bank1
-                   : hlslib::ocl::MemoryBank::bank0,
+    auto write0Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
+        kDimms == 1 ? hlslib::ocl::MemoryBank::bank0
+                    : hlslib::ocl::MemoryBank::bank1,
         kMemorySize);
+
+    hlslib::ocl::Buffer<Data_t, hlslib::ocl::Access::read> read1Device;
+    hlslib::ocl::Buffer<Data_t, hlslib::ocl::Access::write> write1Device;
+    if (kDimms >= 2) {
+      read1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
+          hlslib::ocl::MemoryBank::bank2, kMemorySize);
+      write1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
+          hlslib::ocl::MemoryBank::bank3, kMemorySize);
+    }
 
     if (verify) {
       read = std::vector<Data_t>(kMemorySize, 1);
-      readDevice.CopyToDevice(read.cbegin());
+      read0Device.CopyToDevice(read.cbegin());
+      if (kDimms > 2) {
+        read1Device.CopyToDevice(read.cbegin());
+      }
     }
 
-    auto kernel = context.MakeKernelFromBinary(
-        "memory_benchmark.xclbin", "MemoryBenchmark", readDevice, writeDevice);
+    auto kernel = kDimms <= 2
+                      ? context.MakeKernelFromBinary("peak_benchmark.xclbin",
+                                                     "MemoryBenchmark",
+                                                     read0Device, write0Device)
+                      : context.MakeKernelFromBinary("peak_benchmark.xclbin",
+                                                     "MemoryBenchmark",
+                                                     read0Device, write0Device,
+                                                     read1Device, write1Device);
 
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
     auto transferred =
         2e-9 * static_cast<float>((static_cast<long>(kBurstCount) *
                                    kBurstLength * (kPortWidth / 8)));
+    if (kDimms >= 4) {
+      transferred *= 2;
+    }
     std::cout << " Done.\nTransferred " << std::setprecision(2) << transferred
               << " GB in " << elapsed << " seconds, bandwidth "
               << (transferred / elapsed) << " GB/s" << std::endl;
     if (verify) {
-      write.resize(kMemorySize);
-      writeDevice.CopyToHost(write.begin());
+      write0.resize(kMemorySize);
+      write0Device.CopyToHost(write0.begin());
+      if (kDimms >= 4) {
+        write1.resize(kMemorySize);
+        write1Device.CopyToHost(write1.begin());
+      }
     }
 
   } catch (std::runtime_error const &err) {
@@ -74,10 +99,16 @@ int main(int argc, char **argv) {
         break;
       }
       for (int j = begin; j < end; ++j) {
-        std::cout << write[j] << " / " << read[j] << "\n";
-        if (write[j] != read[j]) {
+        std::cout << write0[j] << " / " << read[j] << "\n";
+        if (write0[j] != read[j]) {
           std::cerr << "Verification failed." << std::endl;
           return 1;
+        }
+        if (kDimms >= 2) {
+          if (write1[j] != read[j]) {
+            std::cerr << "Verification failed." << std::endl;
+            return 1;
+          }
         }
       }
     }
