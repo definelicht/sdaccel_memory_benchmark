@@ -56,11 +56,11 @@ int main(int argc, char **argv) {
     }
 
     auto kernel = kDimms <= 2
-                      ? context.MakeKernelFromBinary("peak_benchmark.xclbin",
+                      ? context.MakeKernelFromBinary("memory_benchmark.xclbin",
                                                      "MemoryBenchmark",
                                                      read0Device, write0Device)
-                      : context.MakeKernelFromBinary("peak_benchmark.xclbin",
-                                                     "MemoryBenchmark",
+                      : context.MakeKernelFromBinary("memory_benchmark.xclbin",
+                                                     "MemoryBenchmarkFourDimms",
                                                      read0Device, write0Device,
                                                      read1Device, write1Device);
 
