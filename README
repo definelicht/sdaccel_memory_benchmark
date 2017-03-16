@@ -1,0 +1,7 @@
+To build:
+  mkdir <path to build dir>
+  cd <path to build dir>
+  cmake <path to source dir> -DBENCHMARK_TARGET=<[ADM-7V3/TUL-KU115/TUL-KU115-XPR]>
+  make
+  make synthesis
+  make kernel
