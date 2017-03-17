@@ -85,8 +85,8 @@ target_link_libraries(Testbench ${BENCHMARK_LIBS})
 add_test(Testbench Testbench)
 
 # SDAccel
-add_executable(ExecuteKernel ExecuteKernel.cpp)
-target_link_libraries(ExecuteKernel ${BENCHMARK_LIBS})
+add_executable(ExecuteKernel.exe ExecuteKernel.cpp)
+target_link_libraries(ExecuteKernel.exe ${BENCHMARK_LIBS})
 set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS} 
   -O3
   # Includes
