@@ -20,9 +20,15 @@ elseif (BENCHMARK_TARGET STREQUAL "TUL-KU115-XPR")
   set(BENCHMARK_DIMMS 4)
   set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmarkFourDimms")
 elseif (BENCHMARK_TARGET STREQUAL "ADM-KU3")
-  set(BENCHMARK_PART_NAME "xcku060-ffva1156") 
+  set(BENCHMARK_PART_NAME "xcku060-ffva1156-2-e") 
   set(BENCHMARK_DSA_STRING "xilinx:adm-pcie-ku3:2ddr:3.2")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDACCEL_MEMORYBENCHMARK_ADM_KU3")
+  set(BENCHMARK_DIMMS 2)
+  set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmark")
+elseif (BENCHMARK_TARGET STREQUAL "ADM-KU3-XPR")
+  set(BENCHMARK_PART_NAME "xcku060-ffva1156-2-e") 
+  set(BENCHMARK_DSA_STRING "xilinx:adm-pcie-ku3:2ddr-xpr:3.2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSDACCEL_MEMORYBENCHMARK_ADM_KU3_XPR")
   set(BENCHMARK_DIMMS 2)
   set(BENCHMARK_ENTRY_FUNCTION "MemoryBenchmark")
 elseif (BENCHMARK_TARGET STREQUAL "ADM-7V3")
@@ -82,6 +88,7 @@ add_test(Testbench Testbench)
 add_executable(ExecuteKernel ExecuteKernel.cpp)
 target_link_libraries(ExecuteKernel ${BENCHMARK_LIBS})
 set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS} 
+  -O3
   # Includes
   -I${CMAKE_BINARY_DIR}
   -I${CMAKE_SOURCE_DIR}
