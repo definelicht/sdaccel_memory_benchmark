@@ -1,5 +1,6 @@
-/// \author Johannes de Fine Licht (johannes.definelicht@inf.ethz.ch)
-/// \date March 2017
+/// @author    Johannes de Fine Licht (johannes.definelicht@inf.ethz.ch)
+/// @date      March 2017 
+/// @copyright This software is copyrighted under the BSD 3-Clause License. 
 
 #include "MemoryBenchmark.h"
 #include <hls_stream.h>
@@ -37,7 +38,7 @@ WriteCount:
 }
 
 void MemoryBenchmark(Data_t const *in, Data_t *out) {
-  #pragma HLS INTERFACE m_axi port=in offset=slave bundle=gmem0
+  #pragma HLS INTERFACE m_axi port=in  offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=out offset=slave bundle=gmem1
   #pragma HLS INTERFACE s_axilite port=in     bundle=control 
   #pragma HLS INTERFACE s_axilite port=out    bundle=control 

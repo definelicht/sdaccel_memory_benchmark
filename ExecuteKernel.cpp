@@ -1,4 +1,8 @@
-#include "hlslib/OpenCL.h"
+/// @author    Johannes de Fine Licht (johannes.definelicht@inf.ethz.ch)
+/// @date      May 2017 
+/// @copyright This software is copyrighted under the BSD 3-Clause License. 
+
+#include "hlslib/SDAccel.h"
 #include "MemoryBenchmark.h"
 #include <string>
 #include <iomanip>
@@ -29,7 +33,7 @@ int main(int argc, char **argv) {
 
   try {
 
-    hlslib::ocl::Context context("Xilinx");
+    hlslib::ocl::Context context;
 
     auto read0Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
         hlslib::ocl::MemoryBank::bank0, kMemorySize);
@@ -49,20 +53,19 @@ int main(int argc, char **argv) {
 
     if (verify) {
       read = std::vector<Data_t>(kMemorySize, 1);
-      read0Device.CopyToDevice(read.cbegin());
+      read0Device.CopyFromHost(read.cbegin());
       if (kDimms > 2) {
-        read1Device.CopyToDevice(read.cbegin());
+        read1Device.CopyFromHost(read.cbegin());
       }
     }
 
-    auto kernel = kDimms <= 2
-                      ? context.MakeKernelFromBinary("memory_benchmark.xclbin",
-                                                     "MemoryBenchmark",
-                                                     read0Device, write0Device)
-                      : context.MakeKernelFromBinary("memory_benchmark.xclbin",
-                                                     "MemoryBenchmarkFourDimms",
-                                                     read0Device, write0Device,
-                                                     read1Device, write1Device);
+    auto kernel =
+        kDimms <= 2
+            ? context.MakeKernel("memory_benchmark.xclbin", "MemoryBenchmark",
+                                 read0Device, write0Device)
+            : context.MakeKernel("memory_benchmark.xclbin",
+                                 "MemoryBenchmarkFourDimms", read0Device,
+                                 write0Device, read1Device, write1Device);
 
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
@@ -73,8 +76,8 @@ int main(int argc, char **argv) {
       transferred *= 2;
     }
     std::cout << " Done.\nTransferred " << std::setprecision(2) << transferred
-              << " GB in " << elapsed << " seconds, bandwidth "
-              << (transferred / elapsed) << " GB/s" << std::endl;
+              << " GB in " << elapsed.first << " seconds, bandwidth "
+              << (transferred / elapsed.first) << " GB/s" << std::endl;
     if (verify) {
       write0.resize(kMemorySize);
       write0Device.CopyToHost(write0.begin());
