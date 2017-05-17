@@ -11,7 +11,7 @@ To build:
 ```sh
 mkdir "<path to build dir>"
 cd "<path to build dir>"
-cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilinx:tul-pcie3-ku115:2ddr:3.1'>"
+cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilinx:tul-pcie3-ku115:2ddr:3.1'>" -DBENCHMARK_DIMMS="<number of DDR DIMMS to benchmark>"
 make           # Builds host-side software
 make synthesis # Runs HLS
 make kernel    # Builds hardware kernel
@@ -20,7 +20,7 @@ make kernel    # Builds hardware kernel
 Running
 -------
 
-Run the binary `ExecuteKernel.exe` built my `make`.
+After building with `make`, run the binary `ExecuteKernel.exe` with either `on` or `off` appended for verification.  
 This executable will look for the kernel file `memory_benchmark.xclbin`, which should be located in the same directory. The file will print the result of the benchmark to standard output.
 
 Bugs
