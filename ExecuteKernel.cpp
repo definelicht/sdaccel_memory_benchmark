@@ -102,7 +102,6 @@ int main(int argc, char **argv) {
         break;
       }
       for (int j = begin; j < end; ++j) {
-        std::cout << write0[j] << " / " << read[j] << "\n";
         if (write0[j] != read[j]) {
           std::cerr << "Verification failed." << std::endl;
           return 1;
@@ -115,6 +114,7 @@ int main(int argc, char **argv) {
         }
       }
     }
+    std::cout << "Results successfully verified." << std::endl;
   }
 
   return 0;
