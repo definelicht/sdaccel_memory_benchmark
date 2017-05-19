@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 set(BENCHMARK_DSA "" CACHE STRING "The SDAccel DSA (firmware) to target.")
 set(BENCHMARK_DIMMS 0 CACHE STRING "How many DDR DIMMs to use for the benchmark.")
 
+# Enforce DSA and DIMMs to be manually specified
 if(BENCHMARK_DSA STREQUAL "")
   message(FATAL_ERROR "Please specify the DSA to use by setting -DBENCHMARK_DSA=<value>")
 endif()
@@ -39,7 +40,7 @@ set(BENCHMARK_HLS_TARGET_TIMING 3.3333 CACHE STRING "Target timing of HLS.")
 
 # Dependencies
 find_package(SDAccel REQUIRED)
-include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} ${SDAccel_INCLUDE_DIRS} ${SDAccel_ROOT_DIR}/Vivado_HLS/include)
+include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include ${SDAccel_INCLUDE_DIRS} ${SDAccel_ROOT_DIR}/Vivado_HLS/include)
 set(BENCHMARK_LIBS ${SDAccel_LIBRARIES})
 
 # Compilation flags
@@ -47,13 +48,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Dependencies
 set(BENCHMARK_HLS_DEPENDS
-    MemoryBenchmark.h.in
-    MemoryBenchmark.cpp
-    hlslib/SDAccel.h)
+    include/MemoryBenchmark.h.in
+    kernel/MemoryBenchmark.cpp
+    include/hlslib/SDAccel.h)
 
 # Configure files 
-configure_file(MemoryBenchmark.h.in MemoryBenchmark.h)
-configure_file(Synthesis.tcl.in Synthesis.tcl)
+configure_file(include/MemoryBenchmark.h.in MemoryBenchmark.h)
+configure_file(script/Synthesis.tcl.in Synthesis.tcl)
 
 # Synthesis
 add_custom_target(synthesis
@@ -62,12 +63,12 @@ add_custom_target(synthesis
 
 # Testing
 enable_testing()
-add_executable(Testbench Testbench.cpp MemoryBenchmark.cpp)
+add_executable(Testbench src/Testbench.cpp kernel/MemoryBenchmark.cpp)
 target_link_libraries(Testbench ${BENCHMARK_LIBS})
 add_test(Testbench Testbench)
 
 # Hardware kernel 
-add_executable(ExecuteKernel.exe ExecuteKernel.cpp)
+add_executable(ExecuteKernel.exe src/ExecuteKernel.cpp)
 target_link_libraries(ExecuteKernel.exe ${BENCHMARK_LIBS})
 set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS} 
   -O3
@@ -75,7 +76,7 @@ set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
   -I${CMAKE_BINARY_DIR}
   -I${CMAKE_SOURCE_DIR}
   # Source
-  ${CMAKE_SOURCE_DIR}/MemoryBenchmark.cpp
+  ${CMAKE_SOURCE_DIR}/kernel/MemoryBenchmark.cpp
   # Flags
   --kernel ${BENCHMARK_ENTRY_FUNCTION} 
   --xdevice ${BENCHMARK_DSA}
