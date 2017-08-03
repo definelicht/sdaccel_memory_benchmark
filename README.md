@@ -1,7 +1,7 @@
 About
 -----
 
-This small SDAccel project is built to measure the peak memory bandwidth of SDAccel DSAs. It works by reading on one interface into a FIFO buffer, and writing back out to another interface. If four DDR DIMMs are specified, this is done for individually for two pairs.
+This small SDAccel project measures memory bandwidth of SDAccel DSAs. It works by reading from one AXI4 interface into a FIFO buffer, then back to another AXI4 interface. If four DDR DIMMs are specified, this is done for two pairs separately.
 
 Building
 --------
