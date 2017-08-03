@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     hlslib::ocl::Buffer<Data_t, hlslib::ocl::Access::read> read1Device;
     hlslib::ocl::Buffer<Data_t, hlslib::ocl::Access::write> write1Device;
-    if (kDimms >= 2) {
+    if (kDimms > 2) {
       read1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::read>(
           hlslib::ocl::MemoryBank::bank2, kMemorySize);
       write1Device = context.MakeBuffer<Data_t, hlslib::ocl::Access::write>(
