@@ -1,7 +1,7 @@
 About
 -----
 
-This small SDAccel project measures memory bandwidth of SDAccel DSAs. It works by reading from one AXI4 interface into a FIFO buffer, then back to another AXI4 interface. If four DDR DIMMs are specified, this is done for two pairs separately.
+This small SDAccel project measures memory bandwidth of SDAccel DSAs. It works by reading from one AXI4 interface into a FIFO buffer, then back to another AXI4 interface. If four DDR DIMMs are specified, this is done for two pairs separately. There is currently no support for running reads-only or writes-only.
 
 Building
 --------
@@ -11,17 +11,18 @@ To build:
 ```sh
 mkdir "<path to build dir>"
 cd "<path to build dir>"
-cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilinx:tul-pcie3-ku115:2ddr:3.1'>" -DBENCHMARK_DIMMS="<number of DDR DIMMS to benchmark>"
-make           # Builds host-side software
-make synthesis # Runs HLS
-make kernel    # Builds hardware kernel
+cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilinx_vcu1525_dynamic_5_1'>" -DBENCHMARK_DIMMS="<number of DDR DIMMS to benchmark>"
+make                # Builds host-side software
+make synthesis      # Runs HLS
+make compile_kernel # Compile to .xo container 
+make link_kernel    # Link to .xclbin binary 
 ```
 
 Running
 -------
 
 After building with `make`, run the binary `ExecuteKernel.exe` with either `on` or `off` appended for verification.  
-This executable will look for the kernel file `memory_benchmark.xclbin`, which should be located in the same directory. The file will print the result of the benchmark to standard output.
+This executable will look for the kernel file `MemoryBenchmark.xclbin`, which should be located in the same directory. The file will print the result of the benchmark to standard output.
 
 Adjusting memory access characteristics 
 ---------------------------------------
@@ -34,6 +35,6 @@ For example, to approximate random access to a 64-bit variable, you could config
 Bugs
 ----
 
-The code included in this repository has _only_ been tested with SDx 2016.3.
-Please report bugs to the issue tracker, or email `johannes.definelicht@inf.ethz.ch`.
+The code included in this repository has been tested with SDx 2018.2.
+Please report bugs using the issue tracker.
 

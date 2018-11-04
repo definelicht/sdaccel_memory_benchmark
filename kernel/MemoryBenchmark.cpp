@@ -3,10 +3,13 @@
 /// @copyright This software is copyrighted under the BSD 3-Clause License. 
 
 #include "MemoryBenchmark.h"
-#include <hls_stream.h>
+#include "hlslib/Stream.h"
+#include "hlslib/Simulation.h"
 #include <cassert>
 
-void Read(Data_t const *input, hls::stream<Data_t> &buffer) {
+using hlslib::Stream;
+
+void Read(Data_t const *input, Stream<Data_t> &buffer) {
 ReadCount:
   for (int i = 0; i < kBurstCount; ++i) {
   ReadBurst:
@@ -21,7 +24,7 @@ ReadCount:
   }
 }
 
-void Write(hls::stream<Data_t> &buffer, Data_t *output) {
+void Write(Stream<Data_t> &buffer, Data_t *output) {
 WriteCount:
   for (int i = 0; i < kBurstCount; ++i) {
   WriteBurst:
@@ -43,11 +46,15 @@ void MemoryBenchmark(Data_t const *in, Data_t *out) {
   #pragma HLS INTERFACE s_axilite port=in     bundle=control 
   #pragma HLS INTERFACE s_axilite port=out    bundle=control 
   #pragma HLS INTERFACE s_axilite port=return bundle=control 
+
   #pragma HLS DATAFLOW
-  hls::stream<Data_t> buffer;
-  #pragma HLS STREAM variable=buffer depth=256
-  Read(in, buffer);
-  Write(buffer, out);
+
+  Stream<Data_t> buffer("buffer", 256);
+
+  HLSLIB_DATAFLOW_INIT();
+  HLSLIB_DATAFLOW_FUNCTION(Read, in, buffer);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer, out);
+  HLSLIB_DATAFLOW_FINALIZE()
 }
 
 void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
@@ -61,13 +68,16 @@ void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
   #pragma HLS INTERFACE s_axilite port=in1    bundle=control 
   #pragma HLS INTERFACE s_axilite port=out1   bundle=control 
   #pragma HLS INTERFACE s_axilite port=return bundle=control 
+
   #pragma HLS DATAFLOW
-  hls::stream<Data_t> buffer0;
-  #pragma HLS STREAM variable=buffer0 depth=256
-  hls::stream<Data_t> buffer1;
-  #pragma HLS STREAM variable=buffer1 depth=256
-  Read(in0, buffer0);
-  Write(buffer0, out0);
-  Read(in1, buffer1);
-  Write(buffer1, out1);
+
+  Stream<Data_t> buffer0("buffer0", 256);
+  Stream<Data_t> buffer1("buffer1", 256);
+
+  HLSLIB_DATAFLOW_INIT();
+  HLSLIB_DATAFLOW_FUNCTION(Read, in0, buffer0);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer0, out0);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in1, buffer1);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer1, out1);
+  HLSLIB_DATAFLOW_FINALIZE()
 }

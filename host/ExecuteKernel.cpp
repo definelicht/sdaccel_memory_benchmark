@@ -59,25 +59,25 @@ int main(int argc, char **argv) {
       }
     }
 
+    auto program = context.MakeProgram("MemoryBenchmark.xclbin");
     auto kernel =
         kDimms <= 2
-            ? context.MakeKernel("memory_benchmark.xclbin", "MemoryBenchmark",
-                                 read0Device, write0Device)
-            : context.MakeKernel("memory_benchmark.xclbin",
-                                 "MemoryBenchmarkFourDimms", read0Device,
+            ? program.MakeKernel("MemoryBenchmark", read0Device, write0Device)
+            : program.MakeKernel("MemoryBenchmarkFourDimms", read0Device,
                                  write0Device, read1Device, write1Device);
 
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
-    auto transferred =
+    unsigned long transferred =
         2e-9 * static_cast<float>((static_cast<long>(kBurstCount) *
                                    kBurstLength * (kPortWidth / 8)));
     if (kDimms >= 4) {
       transferred *= 2;
     }
-    std::cout << " Done.\nTransferred " << std::setprecision(2) << transferred
-              << " GB in " << elapsed.first << " seconds, bandwidth "
-              << (transferred / elapsed.first) << " GB/s" << std::endl;
+    std::cout << " Done.\nTransferred " << std::setprecision(4) << transferred
+              << " GB in " << elapsed.first
+              << " seconds, corresponding to a bandwidth of "
+              << (transferred / elapsed.first) << " GB/s." << std::endl;
     if (verify) {
       write0.resize(kMemorySize);
       write0Device.CopyToHost(write0.begin());
