@@ -3,6 +3,8 @@ About
 
 This small SDAccel project measures memory bandwidth of SDAccel DSAs. It works by reading from one AXI4 interface into a FIFO buffer, then back to another AXI4 interface. If four DDR DIMMs are specified, this is done for two pairs separately. There is currently no support for running reads-only or writes-only.
 
+Remember to fetch submodules with `git clone --recursive-submodules`, or post-clone with `git submodule update --init`.
+
 Building
 --------
 
