@@ -37,7 +37,7 @@ set(BENCHMARK_TARGET_CLOCK 300 CACHE STRING "Target clock speed.")
 
 # Dependencies
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/hlslib/cmake/FindSDAccel.cmake")
-  set(FATAL_ERROR "hlslib not found. Did you remember to checkout submodules? Please run \"git submodule update --init\".")
+  message(FATAL_ERROR "hlslib not found. Did you remember to checkout submodules? Please run \"git submodule update --init\" now.")
 endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/hlslib/cmake)
 find_package(SDAccel REQUIRED)
