@@ -28,11 +28,9 @@ endif()
 set(BENCHMARK_PART_NAME "xcvu9p-flgb2104-2-i") 
 set(BENCHMARK_KEEP_INTERMEDIATE OFF CACHE STRING
     "Keep intermediate SDAccel files")
-
-# Domain configuration
 set(BENCHMARK_PORT_WIDTH 512 CACHE STRING "Width of port to memory in bits.")
-set(BENCHMARK_BURST_COUNT 524288 CACHE STRING "Number of bursts to issue.")
-set(BENCHMARK_BURST_LENGTH 2048 CACHE STRING "Length of issued bursts considering the port width.")
+set(BENCHMARK_MEMORY_SIZE 65536 CACHE STRING "Size of memory in bytes.")
+set(BENCHMARK_BUFFER_DEPTH 512 CACHE STRING "Buffer depth between reader and write.")
 set(BENCHMARK_TARGET_CLOCK 300 CACHE STRING "Target clock speed.")
 
 # Dependencies

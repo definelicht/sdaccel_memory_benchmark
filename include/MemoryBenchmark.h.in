@@ -7,18 +7,19 @@
 #include <cstddef>
 #include <ap_int.h>
 
-constexpr int kBurstCount = ${BENCHMARK_BURST_COUNT};
-constexpr int kBurstLength = ${BENCHMARK_BURST_LENGTH};
-constexpr int kMemorySize = 32 * kBurstLength;
+constexpr int kMemorySize = ${BENCHMARK_MEMORY_SIZE};
 constexpr int kPortWidth = ${BENCHMARK_PORT_WIDTH};
+constexpr int kBufferDepth = ${BENCHMARK_BUFFER_DEPTH};
 constexpr int kDimms = ${BENCHMARK_DIMMS};
 using Data_t = ap_uint<kPortWidth>;
 
 extern "C" {
 
-void MemoryBenchmark(Data_t const *in, Data_t *out);
+void MemoryBenchmark(Data_t const *in, Data_t *out, const unsigned burst_length,
+                     const unsigned burst_count);
 
 void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
-                              Data_t const *in1, Data_t *out1);
-
+                              Data_t const *in1, Data_t *out1,
+                              const unsigned burst_length,
+                              const unsigned burst_count);
 }

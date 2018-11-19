@@ -6,17 +6,26 @@
 #include <iostream>
 #include <vector>
 
-int main() {
+int main(const int argc, char const *const *const argv) {
+
+  if (argc != 3) {
+    std::cerr << "Usage: ./Testbench <burst length> <burst count>\n";
+    return 1;
+  }
+
+  const unsigned burst_length = std::stoul(argv[1]);
+  const unsigned burst_count = std::stoul(argv[2]);
+
   std::vector<Data_t> read(kMemorySize, 1);
   std::vector<Data_t> write0(kMemorySize, 0);
   std::vector<Data_t> write1(kMemorySize, 0);
   std::vector<Data_t> write2(kMemorySize, 0);
-  MemoryBenchmark(read.data(), write0.data());
+  MemoryBenchmark(read.data(), write0.data(), burst_length, burst_count);
   MemoryBenchmarkFourDimms(read.data(), write1.data(), read.data(),
-                           write2.data());
-  for (int i = 0; i < kBurstCount; ++i) {
-    const int begin = i * (kBurstLength + 1);
-    const int end = i * (kBurstLength + 1) + kBurstLength;
+                           write2.data(), burst_length, burst_count);
+  for (int i = 0; i < burst_count; ++i) {
+    const int begin = i * (burst_length + 1);
+    const int end = i * (burst_length + 1) + burst_length;
     if (end >= kMemorySize) { 
       break;
     }
@@ -35,4 +44,6 @@ int main() {
       }
     }
   }
+
+  return 0;
 }
