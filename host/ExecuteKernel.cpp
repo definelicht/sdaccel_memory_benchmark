@@ -58,15 +58,23 @@ int main(int argc, char **argv) {
     std::cout << "Executing kernel..." << std::flush;
     const auto elapsed = kernel.ExecuteTask();
     unsigned long transferred =
-        2e-9 * static_cast<float>((static_cast<long>(burst_count) *
+        2 * static_cast<float>((static_cast<long>(burst_count) *
                                    burst_length * (kPortWidth / 8)));
     if (kDimms >= 4) {
       transferred *= 2;
     }
-    std::cout << " Done.\nTransferred " << std::setprecision(4) << transferred
-              << " GB in " << elapsed.first
+    std::cout << " Done.\nTransferred ";
+    if (transferred >= 1e9) {
+      std::cout << 1e-9 * transferred << " GB";
+    } else if (transferred >= 1e6) {
+      std::cout << 1e-6 * transferred << " MB";
+    } else {
+      std::cout << transferred << " B";
+    }
+    std::cout << " in " << elapsed.second
               << " seconds, corresponding to a bandwidth of "
-              << (transferred / elapsed.first) << " GB/s." << std::endl;
+              << (1e-9 * (transferred / elapsed.second)) << " GB/s."
+              << std::endl;
     write0.resize(kMemorySize);
     write0Device.CopyToHost(write0.begin());
     if (kDimms >= 4) {
