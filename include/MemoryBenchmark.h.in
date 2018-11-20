@@ -15,11 +15,33 @@ using Data_t = ap_uint<kPortWidth>;
 
 extern "C" {
 
-void MemoryBenchmark(Data_t const *in, Data_t *out, const unsigned burst_length,
-                     const unsigned burst_count);
+void ReadWriteTwoDimms(Data_t const *in, Data_t *out,
+                       const unsigned burst_length,
+                       const unsigned burst_count); 
 
-void MemoryBenchmarkFourDimms(Data_t const *in0, Data_t *out0,
-                              Data_t const *in1, Data_t *out1,
-                              const unsigned burst_length,
-                              const unsigned burst_count);
+void ReadWriteFourDimms(Data_t const *in0, Data_t *out0,
+                        Data_t const *in1, Data_t *out1,
+                        const unsigned burst_length,
+                        const unsigned burst_count); 
+
+void ReadFourDimms(Data_t const *in0, Data_t const *in1,
+                   Data_t const *in2, Data_t const *in3,
+                   Data_t *out,
+                   const unsigned burst_length,
+                   const unsigned burst_count); 
+
+void ReadTwoDimms(Data_t const *in0, Data_t const *in1,
+                  Data_t *out,
+                  const unsigned burst_length,
+                  const unsigned burst_count); 
+
+void WriteFourDimms(Data_t *out0, Data_t *out1,
+                    Data_t *out2, Data_t *out3,
+                    const unsigned burst_length,
+                    const unsigned burst_count);
+
+void WriteTwoDimms(Data_t *out0, Data_t *out1,
+                   const unsigned burst_length,
+                   const unsigned burst_count);
+
 }
