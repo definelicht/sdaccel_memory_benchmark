@@ -32,7 +32,7 @@ Adjusting memory access characteristics
 The default CMake configuration tests peak memory performance by reading 512-bit vectors.
 The number of values read in a burst, as well as the total number of bursts to perform, can be specified at runtime. To hide overhead due to executing the OpenCL kernel, use a high burst count.
 
-In order to measure random access, you can modify the `BENCHMARK_MEMORY_PORT_WIDTH` variable to be smaller than 512 bit (this requires re-building the kerne;), then use a burst length of 1.
+In order to measure random access, you can modify the `BENCHMARK_MEMORY_PORT_WIDTH` variable to be smaller than 512 bit (this requires re-building the kernel), then use a burst length of 1.
 
 Bugs
 ----
