@@ -1,38 +1,38 @@
 About
 -----
 
-This small SDAccel project measures memory bandwidth of SDAccel DSAs. It works by reading from one AXI4 interface into a FIFO buffer, then back to another AXI4 interface. If four DDR DIMMs are specified, this is done for two pairs separately. There is currently no support for running reads-only or writes-only.
+This small SDAccel project measures memory bandwidth of SDAccel DSAs. It provides read-only, write-only, and combined read-write kernels that access 1, 2 or 4 DDR banks on the device.
 
 Remember to fetch submodules with `git clone --recursive-submodules`, or post-clone with `git submodule update --init`.
 
 Building
 --------
 
-To build:
+To build (where `mode` can be `[read/write/read_write]`):
 
 ```sh
 mkdir "<path to build dir>"
 cd "<path to build dir>"
 cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilinx_vcu1525_dynamic_5_1'>" -DBENCHMARK_DIMMS="<number of DDR DIMMS to benchmark>"
-make                # Builds host-side software
-make synthesis      # Runs HLS
-make compile_kernel # Compile to .xo container 
-make link_kernel    # Link to .xclbin binary 
+make                  # Builds host-side software
+make synthesis_<mode> # Runs HLS (mode can be [read/write/read_write])
+make compile_<mode>   # Compile to .xo container
+make link_read_<mode> # Link to .xclbin binary 
 ```
 
 Running
 -------
 
-After building with `make`, run the binary `ExecuteKernel.exe` with either `on` or `off` appended for verification.  
-This executable will look for the kernel file `MemoryBenchmark.xclbin`, which should be located in the same directory. The file will print the result of the benchmark to standard output.
+After building with `make`, run the binary `ExecuteKernel.exe <mode> <burst length> <burst count>`.
+This executable will look for the kernel file `MemoryBenchmark_<mode>.xclbin`, which should be located in the same directory. The file will print the result of the benchmark to standard output. The Read, Write and ReadWrite kernels must be built separately.
 
 Adjusting memory access characteristics 
 ---------------------------------------
 
-The default CMake configuration tests peak memory performance by issuing wide bursts.
-In order to test random access, the parameters `BENCHMARK_BURST_LENGTH` (how many elements are requested in a single burst) and `BENCHMARK_BURST_COUNT` (how many bursts of the given length to execute) can be modified, as well as the port width to global memory with `BENCHMARK_PORT_WIDTH`. 
+The default CMake configuration tests peak memory performance by reading 512-bit vectors.
+The number of values read in a burst, as well as the total number of bursts to perform, can be specified at runtime. To hide overhead due to executing the OpenCL kernel, use a high burst count.
 
-For example, to approximate random access to a 64-bit variable, you could configure the kernel with `-DBENCHMARK_BURST_LENGTH=1 -DBENCHMARK_BURST_COUNT=1073741824 -DBENCHMARK_PORT_WIDTH=64`, which would yield a much lower bandwidth than the default configuration. 
+In order to measure random access, you can modify the `BENCHMARK_MEMORY_PORT_WIDTH` variable to be smaller than 512 bit (this requires re-building the kerne;), then use a burst length of 1.
 
 Bugs
 ----
