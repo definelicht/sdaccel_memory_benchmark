@@ -8,7 +8,7 @@
 
 int main(const int argc, char const *const *const argv) {
   if (argc != 4) {
-    std::cerr << "Usage: ./Testbench <burst length> <burst count>\n";
+    std::cerr << "Usage: ./Testbench <burst length> <burst count> <gap>\n";
     return 1;
   }
 
@@ -40,8 +40,8 @@ int main(const int argc, char const *const *const argv) {
                  write[8].data(), burst_length, burst_count, gap);
   std::cout << "Verifying...\n" << std::flush;
   for (unsigned i = 0; i < burst_count; ++i) {
-    const int begin = i * (burst_length + 1);
-    const int end = i * (burst_length + 1) + burst_length;
+    const int begin = i * (burst_length + gap);
+    const int end = i * (burst_length + gap) + burst_length;
     if (end >= kMemorySize) {
       break;
     }
