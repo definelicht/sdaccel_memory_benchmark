@@ -17,7 +17,7 @@ cmake "<path to source dir>" -DBENCHMARK_DSA="<DSA string to target, e.g. 'xilin
 make                  # Builds host-side software
 make synthesis_<mode> # Runs HLS (mode can be [read/write/read_write])
 make compile_<mode>   # Compile to .xo container
-make link_read_<mode> # Link to .xclbin binary 
+make link_<mode>      # Link to .xclbin binary 
 ```
 
 Running
