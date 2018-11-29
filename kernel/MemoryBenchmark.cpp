@@ -217,6 +217,7 @@ void WriteFourDimms(Data_t *out0, Data_t *out1,
   #pragma HLS INTERFACE s_axilite port=out3          bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_length  bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_count   bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap           bundle=control 
   #pragma HLS INTERFACE s_axilite port=return        bundle=control 
 
   #pragma HLS DATAFLOW
