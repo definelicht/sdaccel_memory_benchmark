@@ -15,9 +15,9 @@ enum class Mode {
 };
 
 int main(int argc, char **argv) {
-  if (argc != 4) {
+  if (argc != 5) {
     std::cerr << "Usage: ./Testbench <mode [read/write/read_write]> <burst "
-                 "length> <burst count>\n";
+                 "length> <burst count> <gap>\n";
     return 1;
   }
 
@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
   }
   const unsigned burst_length = std::stoul(argv[2]);
   const unsigned burst_count = std::stoul(argv[3]);
+  const unsigned gap = std::stoul(argv[4]);
 
   std::cout << "Initializing host memory...\n" << std::flush;
   std::vector<Data_t, hlslib::ocl::AlignedAllocator<Data_t, 4096>> read;
@@ -103,14 +104,14 @@ int main(int argc, char **argv) {
       if (kDimms <= 2) {
         auto kernel = program.MakeKernel(
             ReadTwoDimms, "ReadTwoDimms", read_device[0], read_device[1],
-            read_out_device, burst_length, burst_count);
+            read_out_device, burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       } else {
         auto kernel =
             program.MakeKernel(ReadFourDimms, "ReadFourDimms", read_device[0],
                                read_device[1], read_device[2], read_device[3],
-                               read_out_device, burst_length, burst_count);
+                               read_out_device, burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       }
@@ -119,13 +120,13 @@ int main(int argc, char **argv) {
       if (kDimms <= 2) {
         auto kernel =
             program.MakeKernel(WriteTwoDimms, "WriteTwoDimms", write_device[0],
-                               write_device[1], burst_length, burst_count);
+                               write_device[1], burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       } else {
         auto kernel = program.MakeKernel(
             WriteFourDimms, "WriteFourDimms", write_device[0], write_device[1],
-            write_device[2], write_device[3], burst_length, burst_count);
+            write_device[2], write_device[3], burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       }
@@ -134,14 +135,14 @@ int main(int argc, char **argv) {
       if (kDimms <= 2) {
         auto kernel = program.MakeKernel(ReadWriteTwoDimms, "ReadWriteTwoDimms",
                                          read_device[0], write_device[0],
-                                         burst_length, burst_count);
+                                         burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       } else {
         auto kernel =
             program.MakeKernel(ReadWriteFourDimms, "ReadWriteFourDimms",
                                read_device[0], write_device[0], read_device[1],
-                               write_device[1], burst_length, burst_count);
+                               write_device[1], burst_length, burst_count, gap);
         std::cout << "Executing kernel...\n" << std::flush;
         elapsed = kernel.ExecuteTask();
       }

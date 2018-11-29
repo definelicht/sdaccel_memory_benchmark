@@ -10,14 +10,15 @@
 using hlslib::Stream;
 
 void Read(Data_t const *const input, Stream<Data_t, kBufferDepth> &buffer,
-          const unsigned burst_length, const unsigned burst_count) {
+          const unsigned burst_length, const unsigned burst_count,
+          const unsigned gap) {
 ReadCount:
-  for (int i = 0; i < burst_length; ++i) {
+  for (unsigned i = 0; i < burst_count; ++i) {
   ReadBurst:
-    for (int j = 0; j < burst_count; ++j) {
+    for (unsigned j = 0; j < burst_length; ++j) {
       #pragma HLS LOOP_FLATTEN
       #pragma HLS PIPELINE II=1
-      const auto index = (i * (burst_count + 1) + j) % kMemorySize;
+      const auto index = (i * (burst_length + gap) + j) % kMemorySize;
       assert(index < kMemorySize);
       buffer.Push(input[index]);
     }
@@ -25,15 +26,16 @@ ReadCount:
 }
 
 void Write(Stream<Data_t, kBufferDepth> &buffer, Data_t *const output,
-           const unsigned burst_length, const unsigned burst_count) {
+           const unsigned burst_length, const unsigned burst_count,
+           const unsigned gap) {
 WriteCount:
-  for (int i = 0; i < burst_length; ++i) {
+  for (unsigned i = 0; i < burst_count; ++i) {
   WriteBurst:
-    for (int j = 0; j < burst_count; ++j) {
+    for (unsigned j = 0; j < burst_length; ++j) {
       #pragma HLS LOOP_FLATTEN
       #pragma HLS PIPELINE II=1
       const auto read = buffer.Pop();
-      const auto index = (i * (burst_count + 1) + j) % kMemorySize;
+      const auto index = (i * (burst_length + gap) + j) % kMemorySize;
       assert(index < kMemorySize);
       output[index] = read;
     }
@@ -41,14 +43,14 @@ WriteCount:
 }
 
 void WriteOnly(Data_t *const output, const unsigned burst_length,
-               const unsigned burst_count) {
+               const unsigned burst_count, const unsigned gap) {
 WriteCount:
-  for (int i = 0; i < burst_length; ++i) {
+  for (unsigned i = 0; i < burst_count; ++i) {
   WriteBurst:
-    for (int j = 0; j < burst_count; ++j) {
+    for (unsigned j = 0; j < burst_length; ++j) {
       #pragma HLS LOOP_FLATTEN
       #pragma HLS PIPELINE II=1
-      const auto index = (i * (burst_count + 1) + j) % kMemorySize;
+      const auto index = (i * (burst_length + gap) + j) % kMemorySize;
       assert(index < kMemorySize);
       output[index] = 1;
     }
@@ -59,9 +61,9 @@ template <unsigned num_pipes>
 void ConsumeReads(Stream<Data_t, kBufferDepth> pipes[], Data_t *out,
                   const unsigned burst_length, const unsigned burst_count) {
 ConsumeCount:
-  for (unsigned i = 0; i < burst_length; ++i) {
+  for (unsigned i = 0; i < burst_count; ++i) {
   ConsumeBurst:
-    for (unsigned j = 0; j < burst_count; ++j) {
+    for (unsigned j = 0; j < burst_length; ++j) {
       #pragma HLS LOOP_FLATTEN
       #pragma HLS PIPELINE II=1
       Data_t regs[num_pipes];
@@ -70,7 +72,7 @@ ConsumeCount:
         #pragma HLS UNROLL
         regs[k] = pipes[k].Pop();
       }
-      if (i == burst_length - 1 && j == burst_count - 1) {
+      if (i == burst_count - 1 && j == burst_length - 1) {
         *out = regs[num_pipes - 1];
       }
     }
@@ -79,12 +81,16 @@ ConsumeCount:
 
 void ReadWriteTwoDimms(Data_t const *in, Data_t *out,
                        const unsigned burst_length,
-                       const unsigned burst_count) {
+                       const unsigned burst_count,
+                       const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=in  offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=out offset=slave bundle=gmem1
   #pragma HLS INTERFACE s_axilite port=in           bundle=control 
   #pragma HLS INTERFACE s_axilite port=out          bundle=control 
+  #pragma HLS INTERFACE s_axilite port=burst_length  bundle=control 
+  #pragma HLS INTERFACE s_axilite port=burst_count   bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap           bundle=control 
   #pragma HLS INTERFACE s_axilite port=return       bundle=control 
 
   #pragma HLS DATAFLOW
@@ -92,15 +98,16 @@ void ReadWriteTwoDimms(Data_t const *in, Data_t *out,
   Stream<Data_t, kBufferDepth> buffer("buffer", kBufferDepth);
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(Read, in, buffer, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Write, buffer, out, burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in, buffer, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer, out, burst_length, burst_count, gap);
   HLSLIB_DATAFLOW_FINALIZE()
 }
 
 void ReadWriteFourDimms(Data_t const *in0, Data_t *out0,
                         Data_t const *in1, Data_t *out1,
                         const unsigned burst_length,
-                        const unsigned burst_count) {
+                        const unsigned burst_count,
+                        const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=in0  offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=out0 offset=slave bundle=gmem1
@@ -112,6 +119,7 @@ void ReadWriteFourDimms(Data_t const *in0, Data_t *out0,
   #pragma HLS INTERFACE s_axilite port=out1          bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_length  bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_count   bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap           bundle=control 
   #pragma HLS INTERFACE s_axilite port=return        bundle=control 
 
   #pragma HLS DATAFLOW
@@ -120,10 +128,12 @@ void ReadWriteFourDimms(Data_t const *in0, Data_t *out0,
   Stream<Data_t, kBufferDepth> buffer1("buffer1");
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(Read, in0, buffer0, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Write, buffer0, out0, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Read, in1, buffer1, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Write, buffer1, out1, burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in0, buffer0, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer0, out0, burst_length, burst_count,
+                           gap);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in1, buffer1, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Write, buffer1, out1, burst_length, burst_count,
+                           gap);
   HLSLIB_DATAFLOW_FINALIZE()
 }
 
@@ -131,7 +141,8 @@ void ReadFourDimms(Data_t const *in0, Data_t const *in1,
                    Data_t const *in2, Data_t const *in3,
                    Data_t *out,
                    const unsigned burst_length,
-                   const unsigned burst_count) {
+                   const unsigned burst_count,
+                   const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=in0 offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=in1 offset=slave bundle=gmem1
@@ -144,6 +155,7 @@ void ReadFourDimms(Data_t const *in0, Data_t const *in1,
   #pragma HLS INTERFACE s_axilite port=in3          bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_length bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_count  bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap          bundle=control 
   #pragma HLS INTERFACE s_axilite port=return       bundle=control 
 
   #pragma HLS DATAFLOW
@@ -151,10 +163,10 @@ void ReadFourDimms(Data_t const *in0, Data_t const *in1,
   Stream<Data_t, kBufferDepth> pipes[4];
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(Read, in0, pipes[0], burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Read, in1, pipes[1], burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Read, in2, pipes[2], burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Read, in3, pipes[3], burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in0, pipes[0], burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in1, pipes[1], burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in2, pipes[2], burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in3, pipes[3], burst_length, burst_count, gap);
   HLSLIB_DATAFLOW_FUNCTION(ConsumeReads<4>, pipes, out, burst_length,
                            burst_count);
   HLSLIB_DATAFLOW_FINALIZE()
@@ -163,7 +175,8 @@ void ReadFourDimms(Data_t const *in0, Data_t const *in1,
 void ReadTwoDimms(Data_t const *in0, Data_t const *in1,
                   Data_t *out,
                   const unsigned burst_length,
-                  const unsigned burst_count) {
+                  const unsigned burst_count,
+                  const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=in0 offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=in1 offset=slave bundle=gmem1
@@ -173,6 +186,7 @@ void ReadTwoDimms(Data_t const *in0, Data_t const *in1,
   #pragma HLS INTERFACE s_axilite port=out          bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_length bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_count  bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap          bundle=control 
   #pragma HLS INTERFACE s_axilite port=return       bundle=control 
 
   #pragma HLS DATAFLOW
@@ -180,8 +194,8 @@ void ReadTwoDimms(Data_t const *in0, Data_t const *in1,
   Stream<Data_t, kBufferDepth> pipes[2];
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(Read, in0, pipes[0], burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(Read, in1, pipes[1], burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in0, pipes[0], burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(Read, in1, pipes[1], burst_length, burst_count, gap);
   HLSLIB_DATAFLOW_FUNCTION(ConsumeReads<2>, pipes, out, burst_length,
                            burst_count);
   HLSLIB_DATAFLOW_FINALIZE()
@@ -190,7 +204,8 @@ void ReadTwoDimms(Data_t const *in0, Data_t const *in1,
 void WriteFourDimms(Data_t *out0, Data_t *out1,
                     Data_t *out2, Data_t *out3,
                     const unsigned burst_length,
-                    const unsigned burst_count) {
+                    const unsigned burst_count,
+                    const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=out0 offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=out1 offset=slave bundle=gmem1
@@ -207,16 +222,17 @@ void WriteFourDimms(Data_t *out0, Data_t *out1,
   #pragma HLS DATAFLOW
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out0, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out1, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out2, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out3, burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out0, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out1, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out2, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out3, burst_length, burst_count, gap);
   HLSLIB_DATAFLOW_FINALIZE()
 }
 
 void WriteTwoDimms(Data_t *out0, Data_t *out1,
                    const unsigned burst_length,
-                   const unsigned burst_count) {
+                   const unsigned burst_count,
+                   const unsigned gap) {
 
   #pragma HLS INTERFACE m_axi port=out0 offset=slave bundle=gmem0
   #pragma HLS INTERFACE m_axi port=out1 offset=slave bundle=gmem1
@@ -224,12 +240,13 @@ void WriteTwoDimms(Data_t *out0, Data_t *out1,
   #pragma HLS INTERFACE s_axilite port=out1          bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_length  bundle=control 
   #pragma HLS INTERFACE s_axilite port=burst_count   bundle=control 
+  #pragma HLS INTERFACE s_axilite port=gap           bundle=control 
   #pragma HLS INTERFACE s_axilite port=return        bundle=control 
 
   #pragma HLS DATAFLOW
 
   HLSLIB_DATAFLOW_INIT();
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out0, burst_length, burst_count);
-  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out1, burst_length, burst_count);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out0, burst_length, burst_count, gap);
+  HLSLIB_DATAFLOW_FUNCTION(WriteOnly, out1, burst_length, burst_count, gap);
   HLSLIB_DATAFLOW_FINALIZE()
 }
