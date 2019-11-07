@@ -61,11 +61,16 @@ int main(int argc, char **argv) {
     WriteBuffer_t write_device[4];
     WriteBuffer_t read_out_device;
     if (mode == Mode::read) {
-      read_device[0] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
-                                    read.cbegin(), read.cend());
-      read_device[1] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
-                                    read.cbegin(), read.cend());
       read_out_device = WriteBuffer_t(context, 1);
+      if (kDimms == 1) {
+        read_device[0] = ReadBuffer_t(context, read.cbegin(), read.cend());
+        read_device[1] = ReadBuffer_t(context, read.cbegin(), read.cend());
+      } else {
+        read_device[0] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
+                                      read.cbegin(), read.cend());
+        read_device[1] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
+                                      read.cbegin(), read.cend());
+      }
       if (kDimms > 2) {
         read_device[2] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank2,
                                       read.cbegin(), read.cend());
@@ -73,10 +78,15 @@ int main(int argc, char **argv) {
                                       read.cbegin(), read.cend());
       }
     } else if (mode == Mode::write) {
-      write_device[0] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
-                                      write.cbegin(), write.cend());
-      write_device[1] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
-                                      write.cbegin(), write.cend());
+      if (kDimms == 1) {
+        write_device[0] = WriteBuffer_t(context, write.cbegin(), write.cend());
+        write_device[1] = WriteBuffer_t(context, write.cbegin(), write.cend());
+      } else {
+        write_device[0] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
+                                        write.cbegin(), write.cend());
+        write_device[1] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
+                                        write.cbegin(), write.cend());
+      }
       if (kDimms > 2) {
         write_device[2] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank2,
                                         write.cbegin(), write.cend());
@@ -84,10 +94,15 @@ int main(int argc, char **argv) {
                                         write.cbegin(), write.cend());
       }
     } else if (mode == Mode::read_write) {
-      read_device[0] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
-                                    read.cbegin(), read.cend());
-      write_device[0] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
-                                      write.cbegin(), write.cend());
+      if (kDimms == 1) {
+        read_device[0] = ReadBuffer_t(context, read.cbegin(), read.cend());
+        write_device[0] = WriteBuffer_t(context, write.cbegin(), write.cend());
+      } else {
+        read_device[0] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank0,
+                                      read.cbegin(), read.cend());
+        write_device[0] = WriteBuffer_t(context, hlslib::ocl::MemoryBank::bank1,
+                                        write.cbegin(), write.cend());
+      }
       if (kDimms > 2) {
         read_device[1] = ReadBuffer_t(context, hlslib::ocl::MemoryBank::bank2,
                                       read.cbegin(), read.cend());

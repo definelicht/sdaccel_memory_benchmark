@@ -93,10 +93,12 @@ foreach(HARDWARE_TARGET ${HARDWARE_TARGETS})
 
   # Kernel build target
   if(((${SDAccel_MAJOR_VERSION} LESS 2018) AND (${SDAccel_MINOR_VERSION} LESS 3)) OR ${SDAccel_MAJOR_VERSION} LESS 2017)
-    set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-      --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-      --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-      --max_memory_ports all)
+    if(BENCHMARK_DIMMS GREATER 1)
+      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+        --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
+        --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
+        --max_memory_ports all)
+    endif()
     # Add third and fourth DIMM
     if(BENCHMARK_DIMMS GREATER 3)
       set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
@@ -110,10 +112,12 @@ foreach(HARDWARE_TARGET ${HARDWARE_TARGETS})
       ${CMAKE_SOURCE_DIR}/kernel/MemoryBenchmark.cpp
       -o MemoryBenchmark_${HARDWARE_TARGET}.xclbin) 
   else()
-    set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-      --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem0:bank0
-      --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem1:bank1
-      --max_memory_ports all)
+    if(BENCHMARK_DIMMS GREATER 1)
+      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem0:bank0
+        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem1:bank1
+        --max_memory_ports all)
+    endif()
     # Add third and fourth DIMM
     if(BENCHMARK_DIMMS GREATER 3)
       set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
