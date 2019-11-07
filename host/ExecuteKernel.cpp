@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 #include "MemoryBenchmark.h"
-#include "hlslib/SDAccel.h"
+#include "hlslib/xilinx/SDAccel.h"
 
 enum class Mode {
   read,

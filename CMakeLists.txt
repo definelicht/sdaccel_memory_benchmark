@@ -91,36 +91,18 @@ foreach(HARDWARE_TARGET ${HARDWARE_TARGETS})
     --xp prop:kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}.kernel_flags="${BENCHMARK_SYNTHESIS_FLAGS}"
     --kernel_frequency=${BENCHMARK_TARGET_CLOCK})
 
-  # Set first and second DIMM
-  if(BENCHMARK_DIMMS GREATER 1)
-    if(NOT (BENCHMARK_DSA MATCHES "dynamic"))
-      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-        --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-        --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-        --max_memory_ports all)
-    else()
-      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem0:bank0
-        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem1:bank1
-        --max_memory_ports all)
-    endif()
-  endif()
-
-  # Add third and fourth DIMM
-  if(BENCHMARK_DIMMS GREATER 3)
-    if(NOT (BENCHMARK_DSA MATCHES "dynamic"))
+  # Kernel build target
+  if(((${SDAccel_MAJOR_VERSION} LESS 2018) AND (${SDAccel_MINOR_VERSION} LESS 3)) OR ${SDAccel_MAJOR_VERSION} LESS 2017)
+    set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+      --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
+      --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
+      --max_memory_ports all)
+    # Add third and fourth DIMM
+    if(BENCHMARK_DIMMS GREATER 3)
       set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
         --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM2.core.OCL_REGION_0.M02_AXI
         --xp misc:map_connect=add.kernel.${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.M_AXI_GMEM3.core.OCL_REGION_0.M03_AXI)
-    else()
-      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
-        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem2:bank2
-        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem3:bank3)
     endif()
-  endif()
-
-  # Kernel build target
-  if(((${SDAccel_MAJOR_VERSION} LESS 2018) AND (${SDAccel_MINOR_VERSION} LESS 3)) OR ${SDAccel_MAJOR_VERSION} LESS 2017)
     set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS} --xdevice ${BENCHMARK_DSA})
     add_custom_target(build_${HARDWARE_TARGET_LOWER}
       COMMAND XILINX_PATH=${CMAKE_BINARY_DIR} ${SDAccel_XOCC}
@@ -128,6 +110,16 @@ foreach(HARDWARE_TARGET ${HARDWARE_TARGETS})
       ${CMAKE_SOURCE_DIR}/kernel/MemoryBenchmark.cpp
       -o MemoryBenchmark_${HARDWARE_TARGET}.xclbin) 
   else()
+    set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+      --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem0:bank0
+      --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem1:bank1
+      --max_memory_ports all)
+    # Add third and fourth DIMM
+    if(BENCHMARK_DIMMS GREATER 3)
+      set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS}
+        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem2:bank2
+        --sp ${HARDWARE_TARGET}${BENCHMARK_ENTRY_FUNCTION_SUFFIX}_1.m_axi_gmem3:bank3)
+    endif()
     set(BENCHMARK_XOCC_FLAGS ${BENCHMARK_XOCC_FLAGS} --platform ${BENCHMARK_DSA})
     add_custom_target(compile_${HARDWARE_TARGET_LOWER}
       COMMAND XILINX_PATH=${CMAKE_BINARY_DIR} ${SDAccel_XOCC} -c
